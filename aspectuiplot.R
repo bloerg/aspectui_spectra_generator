@@ -1,4 +1,6 @@
 library(FITSio)
+library(digest)
+
 
 some_spectra <- data.frame(
     mjd=as.integer(rep(53433, 9)),
@@ -24,7 +26,24 @@ aui_make_tile<-function(spectra_ids, plot_width, plot_height) {
     } else {
         edge_length <- sqrt(nrow(spectra_ids))
         png(
-            filename="/var/tmp/bla.png", 
+            # use the sha256 hash of the concatenated mjd,plate,fiberid
+            # tuples for the filename
+            filename = paste(
+                "/var/tmp/",  # FIXME: This is for testing
+                digest( 
+                    object = paste(
+                        some_spectra$mjd, 
+                        some_spectra$plate, 
+                        some_spectra$fiberid, 
+                        collapse="", 
+                        sep=""
+                    ), 
+                    algo="sha256",
+                    serialize=F
+                ),
+                ".png",
+                sep=""
+            ),
             width=plot_width, 
             height=plot_height, 
             units="px", 
