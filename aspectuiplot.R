@@ -1,5 +1,11 @@
 library(FITSio)
 
+some_spectra <- data.frame(
+    mjd=as.integer(rep(53433, 9)),
+    plate=as.integer(rep(1678, 9)),
+    fiberid=as.integer(rep(425, 9))
+)
+
 aui_make_tile<-function(spectra_ids, plot_width, plot_height) {
     if (
         ! is.data.frame(spectra_ids) |
@@ -17,10 +23,17 @@ aui_make_tile<-function(spectra_ids, plot_width, plot_height) {
         stop("'plot_width' and 'plot_height' have to be integers > 0")
     } else {
         edge_length <- sqrt(nrow(spectra_ids))
-        png(filename="/var/tmp/bla.png", width=plot_width, height=plot_height, units="px", bg="transparent")
+        png(
+            filename="/var/tmp/bla.png", 
+            width=plot_width, 
+            height=plot_height, 
+            units="px", 
+            bg="transparent"
+        )
         par(
             mfrow=c(edge_length, edge_length),
-            mar=c(0,0,0,0)
+            mar=c(0,0,0,0),
+            lwd= 1 + 0.1 * (edge_length)
         )
         for (X in 1:nrow(spectra_ids)) {
             aui_plot_spec(
@@ -29,44 +42,21 @@ aui_make_tile<-function(spectra_ids, plot_width, plot_height) {
                     plate=spectra_ids$plate[X], 
                     fiberid=spectra_ids$fiberid[X],
                     pow10xaxis=0
-                ),
-                plot_width=plot_width, 
-                plot_height=plot_height
+                )
             )
         }
         dev.off()
     }
 }
 
-aui_plot_spec<-function(spectrum, plot_width, plot_height) {
+aui_plot_spec<-function(spectrum) {
     if (
         ! is.data.frame(spectrum) |
         ! is.vector(spectrum$x) | ! is.vector(spectrum$y) |
         ! is.numeric(spectrum$x[1]) | ! is.numeric(spectrum$y[1])
     ) {
         stop("The plotted spectrum must be a data frame consisting of two numeric vectors x and y.")
-
-    } else if (
-        trunc(plot_width) != plot_width |
-        trunc(plot_height) != plot_height |
-        plot_height < 1 | plot_width < 1
-    ) {
-        stop("'plot_width' and 'plot_height' have to be integers > 0")
     } else {
-        
-        temp_margins<-par()$mar
-        temp_margins[1]<-0.1 # bottom
-        temp_margins[2]<-0.1 # left
-        temp_margins[3]<-0.1 # top
-        temp_margins[4]<-0.1 # right
-        par(
-            mar=temp_margins,
-            lwd=0.6,
-            cex=0.5, # general font size
-            cex.axis=1.8, # axis tick label size
-            cex.lab=0.8 # Achsen label (einheiten usw.)
-    #            ,las=1 # y-axis labels horizontal
-        )
         plot(
             spectrum$x,
             spectrum$y, 
