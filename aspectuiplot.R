@@ -1,5 +1,43 @@
 library(FITSio)
 
+aui_make_tile<-function(spectra_ids, plot_width, plot_height) {
+    if (
+        ! is.data.frame(spectra_ids) |
+        ! is.integer(spectra_ids$mjd) |
+        ! is.integer(spectra_ids$plate) |
+        ! is.integer(spectra_ids$fiberid) |
+          sqrt(nrow(spectra_ids)) != round(sqrt(nrow(spectra_ids)))
+    ) {
+        stop("'spectra_ids' has to be a data frame with quadratic nrow and mjd, plate, fiberid columns.")
+    } else if (
+        trunc(plot_width) != plot_width |
+        trunc(plot_height) != plot_height |
+        plot_height < 1 | plot_width < 1
+    ) {
+        stop("'plot_width' and 'plot_height' have to be integers > 0")
+    } else {
+        edge_length <- sqrt(nrow(spectra_ids))
+        png(filename="/var/tmp/bla.png", width=plot_width, height=plot_height, units="px", bg="transparent")
+        par(
+            mfrow=c(edge_length, edge_length),
+            mar=c(0,0,0,0)
+        )
+        for (X in 1:nrow(spectra_ids)) {
+            aui_plot_spec(
+                spectrum = aui_extract_spec(
+                    mjd=spectra_ids$mjd[X], 
+                    plate=spectra_ids$plate[X], 
+                    fiberid=spectra_ids$fiberid[X],
+                    pow10xaxis=0
+                ),
+                plot_width=plot_width, 
+                plot_height=plot_height
+            )
+        }
+        dev.off()
+    }
+}
+
 aui_plot_spec<-function(spectrum, plot_width, plot_height) {
     if (
         ! is.data.frame(spectrum) |
@@ -29,16 +67,15 @@ aui_plot_spec<-function(spectrum, plot_width, plot_height) {
             cex.lab=0.8 # Achsen label (einheiten usw.)
     #            ,las=1 # y-axis labels horizontal
         )
-        return(
-            plot(
-                spectrum$x,
-                spectrum$y, 
-                type="l",
-                xaxt="n",
-                yaxt="n",
-                xlab="",
-                ylab=""
-            )
+        plot(
+            spectrum$x,
+            spectrum$y, 
+            type="l",
+            xaxt="n",
+            yaxt="n",
+            xlab="",
+            ylab="",
+            axes=F
         )
     }
 }
